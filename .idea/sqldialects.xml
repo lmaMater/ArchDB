@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/clearall.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/V1.00.0_user_role_type.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/V1.01.0_release_format_type.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/V1.02.0_releases_table.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/requests/1.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/requests/2.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/requests/3.sql" dialect="PostgreSQL" />
+  </component>
+</project>
