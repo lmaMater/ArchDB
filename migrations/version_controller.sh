@@ -4,7 +4,7 @@ user="${USER}"
 password="${PASSWORD}"
 
 perform_migration() {
-    local migrations_path="/docker-entrypoint-initdb.d/migration"
+    local migrations_path="/docker-entrypoint-initdb.d/migrations"
     migration_version="${MIGRATION_VERSION}"
 
     if [[ -z "$MIGRATION_VERSION" ]]; then

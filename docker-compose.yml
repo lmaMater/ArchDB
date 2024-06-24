@@ -3,8 +3,12 @@ version: '3.8'
 services:
   db:
     image: postgres
+    container_name: database
     restart: always
     environment:
+      PATRONI: "true"
+      PATRONI_SCOPE: "aoty"
+      PATRONI_RESTAPI_CONNECT_ADDRESS: "patroni:8008"
       POSTGRES_DB: aoty
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -17,19 +21,16 @@ services:
       retries: 5
       start_period: 10s
 
-  migration_script:
+  migrations:
     restart: no
+    container_name: migrations
     build:
-      context: .
+      context: ./migrations
       dockerfile: Dockerfile
-    environment:
-      MIGRATION_VERSION: ${MIGRATION_VERSION}
-      PASSWORD: ${PASSWORD}
-      USER: ${USER}
     env_file:
       - .env
     volumes:
-      - ./migrations:/docker-entrypoint-initdb.d/migration
+      - ./migrations/migration_scripts:/docker-entrypoint-initdb.d/migrations
     ports:
       - "8080:8080"
     depends_on:
@@ -38,15 +39,66 @@ services:
 
   fake_app:
     restart: no
+    container_name: fake_app
     build:
       context: ./fake
       dockerfile: Dockerfile
     depends_on:
-      migration_script:
+      migrations:
         condition: service_completed_successfully
+    env_file:
+      - .env
     ports:
       - "8081:8081"
-    environment:
-      FILLING_CNT: ${FILLING_CNT}
-      PASSWORD: ${PASSWORD}
-      USER: ${USER}
+
+  partition_service:
+    restart: no
+    container_name: partition_service
+    build:
+      context: ./participant
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      fake_app:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+
+  analysis_app:
+    restart: no
+    container_name: analysis_app
+    build:
+      context: ./analysis
+      dockerfile: Dockerfile
+    volumes:
+      - ./analysis/analysis_results:/app/analysis_results
+    depends_on:
+      db:
+        condition: service_healthy
+      fake_app:
+        condition: service_completed_successfully
+      partition_service:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    ports:
+      - "8082:8082"
+
+  backup_service:
+    restart: always
+    container_name: backup
+    build:
+      context: ./backups
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      partition_service:
+        condition: service_completed_successfully
+    volumes:
+      - ./backups/db_backups:/backups/db_backups
